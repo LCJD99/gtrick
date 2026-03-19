@@ -29,9 +29,20 @@ Run daily workflow (generate + history + commit + push):
 scripts/daily_garden.sh
 ```
 
-## Daily automation (example cron)
+`daily_garden.sh` includes built-in proxy defaults for common local setups:
+- `PROXY_HOST=127.0.0.1`
+- `PROXY_PORT=7890`
+- exports `http_proxy`, `https_proxy`, `all_proxy`
+- for SSH remotes (`git@github.com`), it also sets `GIT_SSH_COMMAND` via `nc` SOCKS5 proxy when `nc` exists
 
-```cron
-# 09:00 every day
-0 9 * * * cd /path/to/gtrick && ./scripts/daily_garden.sh >> /tmp/gtrick.log 2>&1
-```
+## Daily automation (GitHub Actions)
+
+This repo includes:
+- `.github/workflows/daily-garden.yml`
+- scheduled run at `01:00 UTC` (equivalent to `09:00` in `Asia/Shanghai`)
+- manual trigger via `workflow_dispatch`
+
+Enable it in GitHub:
+1. Push this repository to GitHub.
+2. Open `Actions` tab and enable workflows if prompted.
+3. Optionally click `Daily Garden` -> `Run workflow` for an immediate run.

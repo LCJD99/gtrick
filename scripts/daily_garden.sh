@@ -4,6 +4,18 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+# Proxy settings (for environments using local proxy on 127.0.0.1:7890).
+PROXY_HOST="${PROXY_HOST:-127.0.0.1}"
+PROXY_PORT="${PROXY_PORT:-7890}"
+export http_proxy="${http_proxy:-http://${PROXY_HOST}:${PROXY_PORT}}"
+export https_proxy="${https_proxy:-http://${PROXY_HOST}:${PROXY_PORT}}"
+export all_proxy="${all_proxy:-socks5h://${PROXY_HOST}:${PROXY_PORT}}"
+
+# Route SSH (git@github.com) through SOCKS5 proxy if netcat is available.
+if command -v nc >/dev/null 2>&1; then
+  export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-ssh -o ProxyCommand='nc -X 5 -x ${PROXY_HOST}:${PROXY_PORT} %h %p'}"
+fi
+
 TODAY="$(date +%F)"
 OUT="garden/${TODAY}.txt"
 HISTORY_OUT="garden/history-tree.txt"

@@ -1,0 +1,46 @@
+name: Daily Garden
+
+on:
+  schedule:
+    # 01:00 UTC = 09:00 Asia/Shanghai
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  grow-and-commit:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Shanghai
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Generate today's code tree
+        run: |
+          mkdir -p garden
+          python3 scripts/grow_code_tree.py --date "$(date +%F)" --out "garden/$(date +%F).txt"
+          bash scripts/history_tree.sh
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet -- garden; then
+            echo "No garden changes to commit."
+            exit 0
+          fi
+
+          git add garden
+          git commit -m "garden: grow code tree for $(date +%F)"
+          git push
